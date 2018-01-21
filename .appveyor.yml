@@ -1,0 +1,198 @@
+#
+# Copyright (c) 2018 Marat Abrarov (abrarov@gmail.com)
+#
+# Distributed under the Apache License, Version 2.0. (See accompanying
+# file LICENSE or copy at http://www.apache.org/licenses/LICENSE-2.0)
+#
+
+os: Visual Studio 2015
+
+platform:
+- Win32
+- x64
+
+environment:
+  DEPENDENCIES_FOLDER: C:\projects\dependencies
+  DOWNLOADS_FOLDER: C:\projects\downloads
+
+configuration:
+- Release
+- Debug
+
+  matrix:
+  - MSVC_VERSION: 14.0
+    PROJECT_FOLDER_NAME: CommandLineToArgvW
+  - MSVC_VERSION: 12.0
+    PROJECT_FOLDER_NAME: CommandLineToArgvW
+  - MSVC_VERSION: 11.0
+    PROJECT_FOLDER_NAME: CommandLineToArgvW
+  - MSVC_VERSION: 10.0
+    PROJECT_FOLDER_NAME: CommandLineToArgvW
+  - MSVC_VERSION: 9.0
+    PROJECT_FOLDER_NAME: CommandLineToArgvW
+  - MSVC_VERSION: 14.0
+    PROJECT_FOLDER_NAME: cpp_runtime
+  - MSVC_VERSION: 12.0
+    PROJECT_FOLDER_NAME: cpp_runtime
+  - MSVC_VERSION: 11.0
+    PROJECT_FOLDER_NAME: cpp_runtime
+  - MSVC_VERSION: 10.0
+    PROJECT_FOLDER_NAME: cpp_runtime
+  - MSVC_VERSION: 9.0
+    PROJECT_FOLDER_NAME: cpp_runtime
+
+install:
+- ps: |
+    $env:WINDOWS_SDK_ENV_BATCH_FILE = ""
+    $env:WINDOWS_SDK_ENV_PARAMETERS = ""
+    $env:MSVS_HOME = "${env:ProgramFiles(x86)}\Microsoft Visual Studio $env:MSVC_VERSION"
+    $env:VCVARS_BATCH_FILE = "$env:MSVS_HOME\VC\vcvarsall.bat"
+    $env:MSVS_PATCH_FOLDER = ""
+    $env:MSVS_PATCH_BATCH_FILE = ""
+    switch ($env:PLATFORM) {
+      "Win32" {
+        $env:VCVARS_PLATFORM = "x86"
+      }
+      "x64" {
+        switch ($env:MSVC_VERSION) {
+          "14.0" {
+            $env:VCVARS_PLATFORM = "amd64"
+          }
+          "12.0" {
+            $env:VCVARS_PLATFORM = "amd64"
+          }
+          "11.0" {
+            $env:VCVARS_PLATFORM = "x86_amd64"
+          }
+          "10.0" {
+            $env:VCVARS_BATCH_FILE = ""
+            $env:WINDOWS_SDK_ENV_BATCH_FILE = "$env:ProgramFiles\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd"
+            $env:WINDOWS_SDK_ENV_PARAMETERS = "/x64 /$env:CONFIGURATION"
+          }
+          "9.0" {
+            Write-Host "Selected MSVS version ($env:MSVC_VERSION) and platform ($env:PLATFORM) require patching"
+            $env:MSVS_PATCH_FOLDER = "$env:DEPENDENCIES_FOLDER\vs2008_patch"
+            if (!(Test-Path -Path "$env:MSVS_PATCH_FOLDER")) {
+              $msvs_patch_download_folder = "$env:DOWNLOADS_FOLDER\condaci"
+              $msvs_patch_download_file = "$msvs_patch_download_folder\vs2008_patch.zip"
+              if (!(Test-Path -Path "$msvs_patch_download_file")) {
+                $msvs2008_patch_url = "https://github.com/menpo/condaci.git"
+                $msvs2008_patch_revision = "98d76b2089d494433ac2e3abd920123088a95a6d"
+                $msvs_patch_download_folder_nix = "$msvs_patch_download_folder" -replace "\\", "/"
+                Write-Host "Going to download MSVS patch from: $msvs2008_patch_url to: $msvs_patch_download_folder_nix"
+                git clone --quiet "$msvs2008_patch_url" "$msvs_patch_download_folder_nix"
+                git -C "$msvs_patch_download_folder_nix" checkout --quiet "$msvs2008_patch_revision"
+                if ($LastExitCode -ne 0) {
+                  throw "File downloading failed with exit code $LastExitCode."
+                }
+                Write-Host "Downloaded: $msvs_patch_download_file"
+              }
+              Write-Host "Extracting MSVS patch from: $msvs_patch_download_file to: $env:MSVS_PATCH_FOLDER"
+              New-Item "$env:MSVS_PATCH_FOLDER" -type directory | out-null
+              7z.exe x "$msvs_patch_download_file" -o"$env:MSVS_PATCH_FOLDER" -aoa -y | out-null
+              if ($LastExitCode -ne 0) {
+                throw "File extraction failed with exit code $LastExitCode."
+              }
+              Write-Host "Extracted: $env:MSVS_PATCH_FOLDER"
+            }
+            $env:MSVS_PATCH_BATCH_FILE = "$env:MSVS_PATCH_FOLDER\setup_x64.bat"
+            $env:VCVARS_PLATFORM = "x86_amd64"
+          }
+          default {
+            throw "Unsupported MSVS version: $env:MSVC_VERSION"
+          }
+        }
+      }
+      default {
+        throw "Unsupported platform: $env:PLATFORM"
+      }
+    }
+    switch ($env:CONFIGURATION) {
+      "Debug" {
+        $env:CMAKE_BUILD_CONFIG = "DEBUG"
+      }
+      "Release" {
+        $env:CMAKE_BUILD_CONFIG = "RELEASE"
+      }
+      default {
+        throw "Unsupported build configuration: $env:CONFIGURATION"
+      }
+    }
+    $cmake_generator_msvc_version_suffx = " $env:MSVC_VERSION" -replace "([\d]+)\.([\d]+)", '$1'
+    switch ($env:MSVC_VERSION) {
+      "14.0" {
+        $cmake_generator_msvc_version_suffx = "$cmake_generator_msvc_version_suffx 2015"
+      }
+      "12.0" {
+        $cmake_generator_msvc_version_suffx = "$cmake_generator_msvc_version_suffx 2013"
+      }
+      "11.0" {
+        $cmake_generator_msvc_version_suffx = "$cmake_generator_msvc_version_suffx 2012"
+      }
+      "10.0" {
+        $cmake_generator_msvc_version_suffx = "$cmake_generator_msvc_version_suffx 2010"
+      }
+      "9.0" {
+        $cmake_generator_msvc_version_suffx = "$cmake_generator_msvc_version_suffx 2008"
+      }
+      default {
+        throw "Unsupported MSVS version: $env:MSVC_VERSION"
+      }
+    }
+    $cmake_generator_platform_suffix = ""
+    switch ($env:PLATFORM) {
+      "Win32" {
+        $cmake_generator_platform_suffix = ""
+      }
+      "x64" {
+        $cmake_generator_platform_suffix = " Win64"
+      }
+      default {
+        throw "Unsupported platform: $env:PLATFORM"
+      }
+    }
+    $env:CMAKE_GENERATOR = "Visual Studio$cmake_generator_msvc_version_suffx$cmake_generator_platform_suffix"
+    $env:PROJECT_FOLDER = "$env:APPVEYOR_BUILD_FOLDER\$env:PROJECT_FOLDER_NAME"
+    $env:PROJECT_BUILD_FOLDER = "$env:PROJECT_FOLDER\build"
+
+before_build:
+- ps: |
+    Write-Host "PLATFORM                  : $env:PLATFORM"
+    Write-Host "CONFIGURATION             : $env:CONFIGURATION"
+    Write-Host "MSVS_PATCH_FOLDER         : $env:MSVS_PATCH_FOLDER"
+    Write-Host "MSVS_PATCH_BATCH_FILE     : $env:MSVS_PATCH_BATCH_FILE"
+    Write-Host "WINDOWS_SDK_ENV_BATCH_FILE: $env:WINDOWS_SDK_ENV_BATCH_FILE"
+    Write-Host "WINDOWS_SDK_ENV_PARAMETERS: $env:WINDOWS_SDK_ENV_PARAMETERS"
+    Write-Host "VCVARS_BATCH_FILE         : $env:VCVARS_BATCH_FILE"
+    Write-Host "VCVARS_PLATFORM           : $env:VCVARS_PLATFORM"
+    Write-Host "APPVEYOR_BUILD_FOLDER     : $env:APPVEYOR_BUILD_FOLDER"
+    Write-Host "PROJECT_FOLDER            : $env:PROJECT_FOLDER"
+    Write-Host "PROJECT_BUILD_FOLDER      : $env:PROJECT_BUILD_FOLDER"
+    Write-Host "CMAKE_GENERATOR           : $env:CMAKE_GENERATOR"
+- cmd: if not "%MSVS_PATCH_FOLDER%"=="" cd /d "%MSVS_PATCH_FOLDER%"
+- cmd: if not "%MSVS_PATCH_BATCH_FILE%"=="" call "%MSVS_PATCH_BATCH_FILE%"
+- cmd: if not "%WINDOWS_SDK_ENV_BATCH_FILE%"=="" call "%WINDOWS_SDK_ENV_BATCH_FILE%" %WINDOWS_SDK_ENV_PARAMETERS%
+- cmd: if not "%VCVARS_BATCH_FILE%"=="" call "%VCVARS_BATCH_FILE%" %VCVARS_PLATFORM%
+
+build_script:
+- ps: |
+    New-Item "$env:PROJECT_BUILD_FOLDER" -type directory | out-null
+    Set-Location -Path "$env:PROJECT_BUILD_FOLDER"
+    cmake -D CMAKE_USER_MAKE_RULES_OVERRIDE=$env:PROJECT_FOLDER\cmake\static_c_runtime_overrides.cmake -D CMAKE_USER_MAKE_RULES_OVERRIDE_CXX=$env:PROJECT_FOLDER\cmake\static_cxx_runtime_overrides.cmake -G "$env:CMAKE_GENERATOR" $env:PROJECT_FOLDER
+    if ($LastExitCode -ne 0) {
+      throw "Generation of project failed with exit code $LastExitCode."
+    }
+    $build_cmd = "cmake --build . --config $env:CONFIGURATION"
+    if ($env:MSVC_VERSION -ne "9.0") {
+      $build_cmd = "$build_cmd -- /maxcpucount /verbosity:normal /logger:""C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"""
+    }
+    Invoke-Expression "$build_cmd"
+    if ($LastExitCode -ne 0) {
+      throw "Build failed with exit code $LastExitCode."
+    }
+
+artifacts:
+- path: CommandLineToArgvW\build\$(configuration)\*.exe
+  name: CommandLineToArgvW_parse_args
+- path: cpp_runtime\build\$(configuration)\*.exe
+  name: cpp_runtime_parse_args

@@ -11,13 +11,13 @@ platform:
 - Win32
 - x64
 
-environment:
-  DEPENDENCIES_FOLDER: C:\projects\dependencies
-  DOWNLOADS_FOLDER: C:\projects\downloads
-
 configuration:
 - Release
 - Debug
+
+environment:
+  DEPENDENCIES_FOLDER: C:\projects\dependencies
+  DOWNLOADS_FOLDER: C:\projects\downloads
 
   matrix:
   - MSVC_VERSION: 14.0

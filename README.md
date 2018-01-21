@@ -1,5 +1,9 @@
 # win\_cmd\_line\_parse
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)](LICENSE)
+[![AppVeyor CI Build Status](https://ci.appveyor.com/api/projects/status/0qjrm02d3inak3oo/branch/master?svg=true)](https://ci.appveyor.com/project/mabrarov/win-cmd-line-parse)
+
+
 Tests Windows command line parsing performed using different API.
 
 # Windows \*.bat files

@@ -14,11 +14,15 @@
 #if defined(WIN32)
 int _tmain(int argc, _TCHAR* argv[])
 #else
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 #endif
 {
   for (int i = 0; i < argc; ++i)
   {
+#if defined(WIN32) && defined(_UNICODE)
     std::wcout << argv[i] << std::endl;
+#else
+    std::cout << argv[i] << std::endl;
+#endif
   }
 }

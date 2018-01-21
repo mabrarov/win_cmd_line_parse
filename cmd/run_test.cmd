@@ -1,7 +1,6 @@
 @echo off
 
 echo Running tests...
-echo.
 
 rem Simple cases without special symbols
 
@@ -115,5 +114,4 @@ echo param_echo.cmd "1 2 3\\\\"" "4 5"
 rem call "%~dp0param_echo.cmd" "1 2 3\\\"" "4 5"
 echo Fail
 
-echo.
 echo Tests completed

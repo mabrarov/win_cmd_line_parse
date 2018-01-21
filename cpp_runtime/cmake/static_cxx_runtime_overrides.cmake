@@ -1,8 +1,8 @@
 #
-# Copyright (c) 2010-2015 Marat Abrarov (abrarov@gmail.com)
+# Copyright (c) 2018 Marat Abrarov (abrarov@gmail.com)
 #
-# Distributed under the Boost Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+# Distributed under the Apache License, Version 2.0. (See accompanying
+# file LICENSE or copy at http://www.apache.org/licenses/LICENSE-2.0)
 #
 
 cmake_minimum_required(VERSION 2.8.11)

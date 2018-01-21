@@ -13,7 +13,7 @@ platform:
 
 configuration:
 - Release
-- Debug
+#- Debug
 
 environment:
   DEPENDENCIES_FOLDER: C:\projects\dependencies

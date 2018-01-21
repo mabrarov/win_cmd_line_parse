@@ -9,6 +9,7 @@
 #include <tchar.h>
 #endif
 
+#include <cstdlib>
 #include <iostream>
 
 #if defined(WIN32)
@@ -25,4 +26,5 @@ int main(int argc, char* argv[])
     std::cout << argv[i] << std::endl;
 #endif
   }
+  return EXIT_SUCCESS;
 }

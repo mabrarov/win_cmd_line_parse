@@ -18,7 +18,7 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 #endif
 {
-  for (int i = 0; i < argc; ++i)
+  for (int i = 1; i < argc; ++i)
   {
 #if defined(WIN32) && defined(_UNICODE)
     std::wcout << argv[i] << std::endl;

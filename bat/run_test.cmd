@@ -1,3 +1,5 @@
+@echo off
+
 rem
 rem Copyright (c) 2018 Marat Abrarov (abrarov@gmail.com)
 rem
@@ -5,9 +7,8 @@ rem Distributed under the Apache License, Version 2.0. (See accompanying
 rem file LICENSE or copy at http://www.apache.org/licenses/LICENSE-2.0)
 rem
 
-@echo off
-
 echo Running tests...
+echo.
 
 rem Simple cases without special symbols
 
@@ -32,6 +33,7 @@ call "%~dp0print_args.bat" 1 2 "" 3 4 5
 echo print_args.bat 1 2 """ 3 4 5
 rem call "%~dp0print_args.bat" 1 2 """ 3 4 5
 echo Fail
+echo.
 
 rem Escaping of double quotes in arguments wrapped with double quotes
 
@@ -112,13 +114,16 @@ call "%~dp0print_args.bat" "1 2 3\""" "4 5"
 echo print_args.bat "1 2 3\\"" "4 5"
 rem call "%~dp0print_args.bat" "1 2 3\\"" "4 5"
 echo Fail
+echo.
 
 echo print_args.bat "1 2 3\\\"" "4 5"
 rem call "%~dp0print_args.bat" "1 2 3\\\"" "4 5"
 echo Fail
+echo.
 
 echo print_args.bat "1 2 3\\\\"" "4 5"
 rem call "%~dp0print_args.bat" "1 2 3\\\"" "4 5"
 echo Fail
+echo.
 
 echo Tests completed
